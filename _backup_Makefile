@@ -1,0 +1,84 @@
+CC = g++
+CFLAGS = -g -fPIC -D_FILELINE -Wno-deprecated 
+
+HOME = /mnt/Shared/T20150901
+#HOME = /usr/local/moche_v20150728
+
+MYSQLINC = /usr/include/mysql
+MYSQLLIB = -L /usr/lib64/mysql -l mysqlclient -lz -lm
+
+INC = -I$(HOME)/Utility \
+	  -I$(HOME)/Network  \
+	  -I$(HOME)/Public \
+	  -I$(HOME)/Common \
+	  -I$(HOME)/LoginSrv \
+	  -I$(HOME)/JsonSrv
+	  
+
+OBJS = 	Utility/Yond_mutex.o \
+	    Utility/Yond_thread.o \
+		Utility/Yond_thread_pool.o \
+		Utility/Yond_ini.o \
+		Network/Acceptor.o \
+		Network/Connector.o \
+		Network/Session.o \
+		Network/SessionList.o \
+		Network/SessionPool.o \
+		Network/SyncHandler.o \
+		Network/SocketOpt.o \
+		Network/NetworkObject.o \
+		Network/IOCPServer.o \
+		Public/InfoParser.o \
+		Public/Yond_json.o \
+		Public/JsonString.o \
+		Public/InfoParser.o
+		
+JSONS =	JsonSrv/JsonFactory.o \
+		JsonSrv/JsonServer.o \
+		JsonSrv/ServerSession.o \
+		JsonSrv/PacketHandler.o \
+		JsonSrv/Handler_FromDBServer.o \
+		JsonSrv/Handler_FromLoginServer.o \
+		JsonSrv/LoginServerSession.o \
+		JsonSrv/DBServerSession.o \
+		JsonSrv/JsonMain.o
+
+Login =	LoginSrv/BinarySession.o \
+		LoginSrv/HttpSession.o \
+		LoginSrv/JsonSession.o \
+		LoginSrv/KeyvSession.o \
+		LoginSrv/LoginFactory.o \
+		LoginSrv/ServerSession.o \
+		LoginSrv/TempServerSession.o \
+		LoginSrv/UserSession.o \
+		LoginSrv/LoginServer.o \
+		LoginSrv/LoginMain.o
+		
+BINDIR = $(HOME)/bin
+
+all: checkbin $(BINDIR)/JsonSrv $(BINDIR)/LoginSrv 
+
+$(BINDIR)/JsonSrv: $(JSONS) $(OBJS)
+	$(CC) -g $^ -o $@ -pthread
+
+$(BINDIR)/LoginSrv: $(Login) $(OBJS)
+	$(CC) -g $^ -o $@ -pthread
+	
+.SUFFIXES: .c .o .cpp
+.cpp.o:
+	$(CC) $(CFLAGS) $(INC) -o $@ -c $<
+
+.PHONY: checkbin
+checkbin:
+	test -d "${BINDIR}" || mkdir $(BINDIR)
+
+.PHONY:	clean
+clean:
+	rm -f ./*.o
+	rm -f Utility/*.o
+	rm -f Network/*.o
+	rm -f Public/*.o
+	rm -f JsonSrv/*.o
+	rm -f LoginSrv/*.o
+	rm -rf $(BINDIR)
+	
